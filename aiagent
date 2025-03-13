@@ -1,0 +1,157 @@
+# Import required libraries
+import time
+import pycountry
+import pycountry_convert as pc
+import random
+
+# Hardcoded institution lists with real institutions
+institution_data = {
+    "United States": {
+        "Engineering": [
+            "Massachusetts Institute of Technology (MIT)",
+            "Stanford University",
+            "California Institute of Technology (Caltech)",
+            "Carnegie Mellon University",
+            "Georgia Institute of Technology"
+        ],
+        "Medicine": [
+            "Harvard Medical School",
+            "Johns Hopkins University School of Medicine",
+            "Stanford University School of Medicine",
+            "University of California, San Francisco (UCSF)",
+            "Yale School of Medicine"
+        ]
+    },
+    "Canada": {
+        "Engineering": [
+            "University of Toronto",
+            "University of British Columbia",
+            "McGill University",
+            "University of Waterloo",
+            "University of Alberta"
+        ],
+        "Medicine": [
+            "McGill University Faculty of Medicine",
+            "University of Toronto Faculty of Medicine",
+            "University of British Columbia Faculty of Medicine",
+            "McMaster University Michael G. DeGroote School of Medicine",
+            "University of Ottawa Faculty of Medicine"
+        ]
+    }
+}
+
+# Sample answers for a realistic experience
+sample_answers = {
+    "Massachusetts Institute of Technology (MIT)": {
+        "What are the admission requirements?": "MIT requires a strong academic record, SAT/ACT scores, letters of recommendation, and essays.",
+        "What is the tuition fee?": "The tuition fee for MIT is approximately $55,000 per year.",
+        "What programs are offered?": "MIT offers programs in various engineering disciplines, computer science, and more."
+    },
+    "Harvard Medical School": {
+        "What are the admission requirements?": "Harvard Medical School requires an undergraduate degree, MCAT scores, letters of recommendation, and clinical experience.",
+        "What is the tuition fee?": "The tuition fee for Harvard Medical School is approximately $65,000 per year.",
+        "What is the duration of the MD program?": "The MD program typically takes 4 years to complete."
+    },
+    "University of Toronto": {
+        "What are the admission requirements?": "The University of Toronto requires a high school diploma, specific course prerequisites, and English language proficiency for international students.",
+        "What is the tuition fee?": "Tuition fees vary by program; for engineering, it's approximately CAD 60,000 per year for international students.",
+        "What engineering programs are available?": "Programs include Mechanical, Electrical, Civil, and Computer Engineering, among others."
+    }
+}
+
+# Default answer for unhandled questions
+default_answer = "I'm sorry, I don't have specific information on that. Please try asking something else."
+
+# Set up continents and their corresponding codes
+continents = {
+    'AF': 'Africa',
+    'AS': 'Asia',
+    'EU': 'Europe',
+    'NA': 'North America',
+    'SA': 'South America',
+    'OC': 'Oceania',
+    'AN': 'Antarctica'
+}
+
+# Map continents to countries
+countries_by_continent = {}
+for country in pycountry.countries:
+    try:
+        continent_code = pc.country_alpha2_to_continent_code(country.alpha_2)
+        continent_name = continents[continent_code]
+        if continent_name not in countries_by_continent:
+            countries_by_continent[continent_name] = []
+        countries_by_continent[continent_name].append(country.name)
+    except KeyError:
+        pass
+
+# Helper functions
+def display_options(options, title):
+    """Display a numbered list of options."""
+    print(f"\n{title}:")
+    for i, option in enumerate(options, 1):
+        print(f"{i}. {option}")
+    return len(options)
+
+def get_user_choice(max_options):
+    """Get and validate user's numeric choice."""
+    while True:
+        try:
+            choice = int(input("\nEnter your choice (number): "))
+            if 1 <= choice <= max_options:
+                return choice - 1  # Zero-based index
+            print(f"Please enter a number between 1 and {max_options}.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+
+# Main interaction
+print("Welcome to the Educational Institution Finder!")
+print("Today’s date:", time.strftime("%B %d, %Y"))
+time.sleep(1)
+
+# Step 1: Select continent
+continent_list = list(countries_by_continent.keys())
+display_options(continent_list, "Select a continent")
+continent_choice = get_user_choice(len(continent_list))
+selected_continent = continent_list[continent_choice]
+print(f"You selected: {selected_continent}")
+
+# Step 2: Select country
+country_list = countries_by_continent[selected_continent]
+display_options(country_list, f"Select a country in {selected_continent}")
+country_choice = get_user_choice(len(country_list))
+selected_country = country_list[country_choice]
+print(f"You selected: {selected_country}")
+
+# Step 3: Select stream
+streams = ["Engineering", "Medicine"]
+display_options(streams, "Select a stream")
+stream_choice = get_user_choice(len(streams))
+selected_stream = streams[stream_choice]
+print(f"You selected: {selected_stream}")
+
+# Step 4: Get institution list
+if selected_country in institution_data and selected_stream in institution_data[selected_country]:
+    institutions = institution_data[selected_country][selected_stream]
+else:
+    print(f"Sorry, no institutions found for {selected_stream} in {selected_country}.")
+    institutions = []
+
+if institutions:
+    # Step 5: Display institutions
+    display_options(institutions, f"{selected_stream} Institutions in {selected_country}")
+    institution_choice = get_user_choice(len(institutions))
+    selected_institution = institutions[institution_choice]
+    print(f"\nYou selected: {selected_institution}")
+
+    # Step 6: Query loop with sample answers
+    print("\nYou can ask up to 3 questions about the selected institution.")
+    for _ in range(3):
+        query = input(f"What would you like to know about {selected_institution}? (Type 'exit' to finish): ").strip()
+        if query.lower() == 'exit':
+            break
+        answer = sample_answers.get(selected_institution, {}).get(query, default_answer)
+        print(f"\n{answer}")
+
+# Farewell message
+print("\nThank you for using the Educational Institution Finder! Have a great day!")
